@@ -1,0 +1,191 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  password  String?
+  avatar    String?
+  bio       String?
+  plan      String    @default("FREE") // FREE | KEEPER | FAMILY
+  role      String    @default("USER") // USER | ADMIN
+  invitedById String? // referral tracking — inviter's user id
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  vaults        Vault[]
+  journals      Journal[]
+  albums        Album[]
+  sentRequests  Friendship[] @relation("sender")
+  receivedRequests Friendship[] @relation("receiver")
+  sharesGiven   Share[]       @relation("sharer")
+  sharesGot     Share[]       @relation("recipient")
+  notifications Notification[]
+  accounts      Account[]
+  sessions      Session[]
+  contributedVaults VaultContributor[]
+  reviews       Review[]
+}
+
+model Vault {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  coverImage  String?
+  unlockAt    DateTime
+  isPublic    Boolean  @default(false)
+  isSealed    Boolean  @default(true)
+  category    String?  // e.g. travel, family, friendship, milestones, letters
+  inviteToken String?  @unique // for collaborative invite links
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  memories    Memory[]
+  shares      Share[]
+  contributors VaultContributor[]
+}
+
+model Memory {
+  id        String   @id @default(cuid())
+  type      String   // IMAGE | VIDEO | NOTE
+  url       String
+  caption   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  vaultId   String?
+  vault     Vault?   @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  albumId   String?
+  album     Album?   @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  contributorId String? // who added this memory (for collaborative vaults)
+}
+
+model VaultContributor {
+  id        String   @id @default(cuid())
+  vaultId   String
+  userId    String
+  invitedBy String
+  joinedAt  DateTime @default(now())
+
+  vault     Vault    @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([vaultId, userId])
+}
+
+model Album {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  coverImage  String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memories    Memory[]
+}
+
+model Journal {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  mood      String?  // HAPPY | SAD | NOSTALGIC | EXCITED | CALM | GRATEFUL
+  weather   String?
+  location  String?
+  tags      String? // comma-separated
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  status    String   @default("PENDING") // PENDING | ACCEPTED | DECLINED
+  createdAt DateTime @default(now())
+
+  sender   User @relation("sender",  fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver User @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+model Share {
+  id        String   @id @default(cuid())
+  vaultId   String
+  sharedById String
+  sharedWithId String
+  createdAt DateTime @default(now())
+
+  vault      Vault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  sharer     User  @relation("sharer",    fields: [sharedById],   references: [id], onDelete: Cascade)
+  recipient  User  @relation("recipient", fields: [sharedWithId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // UNLOCK_REMINDER | FRIEND_REQUEST | SHARED_VAULT
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  provider          String // google | credentials
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  rating    Int      // 1-5 stars
+  comment   String?  // optional text
+  isApproved Boolean  @default(false) // admin approves before showing on landing
+  createdAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

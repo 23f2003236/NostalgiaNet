@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+build/
+
+# Production
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+db/*.db
+db/*.db-journal
+
+# Uploaded files (these are ephemeral, don't commit)
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Scripts
+scripts/*.cjs
+
+# Logs
+*.log
+dev.log
+server.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+tmp/
+.cache/
