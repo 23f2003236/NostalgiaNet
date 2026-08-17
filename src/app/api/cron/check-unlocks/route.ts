@@ -20,17 +20,14 @@ export async function GET(req: NextRequest) {
   }
 
   const now = new Date();
-  // Window: vaults that unlocked in the last 24 hours
-  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-  // Find sealed vaults whose unlockAt just passed and we haven't notified yet
+  // Find every sealed vault whose unlockAt has passed, including vaults missed
+  // during a cron outage longer than 24 hours.
   // (no notification with type=UNLOCK_REMINDER for this user/vault combo)
   const vaults = await db.vault.findMany({
     where: {
       isSealed: true,
       unlockAt: {
         lte: now,
-        gte: since,
       },
     },
     include: {

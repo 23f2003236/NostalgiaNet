@@ -47,7 +47,22 @@ export async function GET(req: NextRequest) {
         orderBy,
         take: 60,
       });
-      return NextResponse.json({ vaults });
+      const contributorRows = vaults.length
+        ? await db.vaultContributor.findMany({
+            where: { userId, vaultId: { in: vaults.map((vault) => vault.id) } },
+            select: { vaultId: true },
+          })
+        : [];
+      const contributedVaultIds = new Set(contributorRows.map((row) => row.vaultId));
+      const now = new Date();
+      const visibleVaults = vaults.map((vault) => {
+        const canSeeSealedMemories =
+          vault.userId === userId || contributedVaultIds.has(vault.id);
+        return new Date(vault.unlockAt) > now && !canSeeSealedMemories
+          ? { ...vault, memories: [] }
+          : vault;
+      });
+      return NextResponse.json({ vaults: visibleVaults });
     }
 
     if (scope === "shared") {
@@ -63,7 +78,23 @@ export async function GET(req: NextRequest) {
         },
         orderBy: { createdAt: "desc" },
       });
-      return NextResponse.json({ vaults: shares.map((s) => s.vault) });
+      const vaults = shares.map((share) => share.vault);
+      const contributorRows = vaults.length
+        ? await db.vaultContributor.findMany({
+            where: { userId, vaultId: { in: vaults.map((vault) => vault.id) } },
+            select: { vaultId: true },
+          })
+        : [];
+      const contributedVaultIds = new Set(contributorRows.map((row) => row.vaultId));
+      const now = new Date();
+      const visibleVaults = vaults.map((vault) => {
+        const canSeeSealedMemories =
+          vault.userId === userId || contributedVaultIds.has(vault.id);
+        return new Date(vault.unlockAt) > now && !canSeeSealedMemories
+          ? { ...vault, memories: [] }
+          : vault;
+      });
+      return NextResponse.json({ vaults: visibleVaults });
     }
 
     // "mine" scope: vaults I own + vaults I've joined as a contributor.

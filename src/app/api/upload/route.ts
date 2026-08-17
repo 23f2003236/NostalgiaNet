@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Daily upload limit: 3 photos per day for non-admin users.
+    // Daily upload limit: 3 files per day for non-admin users. Upload records
+    // are created here, before files are attached to a vault, album, or avatar.
     const userRow = await db.user.findUnique({
       where: { id: userId },
       select: { role: true },
@@ -71,9 +72,9 @@ export async function POST(req: NextRequest) {
 
     if (!isAdmin) {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const recentCount = await db.memory.count({
+      const recentCount = await db.upload.count({
         where: {
-          contributorId: userId,
+          userId,
           createdAt: { gte: since },
         },
       });
@@ -196,6 +197,13 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Count every completed upload, including files later used for initial
+    // vault/album creation and profile pictures. This prevents those flows
+    // from bypassing the daily upload limit.
+    await db.upload.createMany({
+      data: uploaded.map(() => ({ userId })),
+    });
 
     return NextResponse.json({ files: uploaded });
   } catch (e) {
