@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getServerUserId } from "@/lib/session";
+import { cleanupBlobUrls } from "@/lib/blob-cleanup";
+import { hasExactlyOneMemoryParent } from "@/lib/memory-association";
 
 export async function GET(req: NextRequest) {
   try {
@@ -59,7 +61,7 @@ export async function GET(req: NextRequest) {
         const canSeeSealedMemories =
           vault.userId === userId || contributedVaultIds.has(vault.id);
         return new Date(vault.unlockAt) > now && !canSeeSealedMemories
-          ? { ...vault, memories: [] }
+          ? { ...vault, coverImage: null, memories: [] }
           : vault;
       });
       return NextResponse.json({ vaults: visibleVaults });
@@ -91,7 +93,7 @@ export async function GET(req: NextRequest) {
         const canSeeSealedMemories =
           vault.userId === userId || contributedVaultIds.has(vault.id);
         return new Date(vault.unlockAt) > now && !canSeeSealedMemories
-          ? { ...vault, memories: [] }
+          ? { ...vault, coverImage: null, memories: [] }
           : vault;
       });
       return NextResponse.json({ vaults: visibleVaults });
@@ -161,7 +163,7 @@ export async function POST(req: NextRequest) {
       unlockAt: string;
       isPublic?: boolean;
       category?: string;
-      memories?: { type: string; url: string; caption?: string }[];
+      memories?: { type: string; url: string; caption?: string; vaultId?: string | null; albumId?: string | null }[];
     };
 
     if (!title?.trim() || !unlockAt) {
@@ -174,6 +176,13 @@ export async function POST(req: NextRequest) {
     const unlockDate = new Date(unlockAt);
     if (isNaN(unlockDate.getTime())) {
       return NextResponse.json({ error: "Invalid unlock date" }, { status: 400 });
+    }
+
+    if (memories?.some((memory) => !hasExactlyOneMemoryParent(memory, "new-vault", null))) {
+      return NextResponse.json(
+        { error: "Each memory must belong to exactly one vault or album" },
+        { status: 400 }
+      );
     }
 
     const vault = await db.vault.create({
@@ -217,11 +226,15 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
-    const vault = await db.vault.findUnique({ where: { id } });
+    const vault = await db.vault.findUnique({
+      where: { id },
+      include: { memories: { select: { url: true } } },
+    });
     if (!vault || vault.userId !== userId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     await db.vault.delete({ where: { id } });
+    await cleanupBlobUrls([vault.coverImage, ...vault.memories.map((memory) => memory.url)]);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[vaults DELETE]", e);

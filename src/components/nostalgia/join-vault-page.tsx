@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useSession, signIn } from "next-auth/react";
 import {
@@ -28,6 +29,7 @@ type Props = {
 
 export function JoinVaultPage({ vault }: Props) {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [joining, setJoining] = useState(false);
   const isUnlocked = new Date(vault.unlockAt) <= new Date();
 
@@ -54,7 +56,7 @@ export function JoinVaultPage({ vault }: Props) {
         toast.success("You've joined! Time to add your memories.");
       }
       setTimeout(() => {
-        window.location.href = "/?view=vaults";
+        router.push("/?view=vaults");
       }, 1200);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not join");

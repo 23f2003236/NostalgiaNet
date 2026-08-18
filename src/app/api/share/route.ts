@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getServerUserId } from "@/lib/session";
 
@@ -109,18 +110,28 @@ export async function POST(req: NextRequest) {
 
     // Create shares (skip existing)
     const created: { id: string }[] = [];
+    let concurrentDuplicates = 0;
     for (const fid of validIds) {
       const existing = await db.share.findFirst({
         where: { vaultId, sharedWithId: fid },
       });
       if (existing) continue;
-      const share = await db.share.create({
-        data: {
-          vaultId,
-          sharedById: userId,
-          sharedWithId: fid,
-        },
-      });
+      let share;
+      try {
+        share = await db.share.create({
+          data: {
+            vaultId,
+            sharedById: userId,
+            sharedWithId: fid,
+          },
+        });
+      } catch (e) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+          concurrentDuplicates++;
+          continue;
+        }
+        throw e;
+      }
       created.push({ id: share.id });
 
       // Create in-app notification
@@ -137,10 +148,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (created.length === 0 && concurrentDuplicates > 0) {
+      return NextResponse.json(
+        { error: "This vault was already shared with the selected friend" },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json({
       ok: true,
       shared: created.length,
-      skipped: friendIds.length - validIds.length,
+      skipped: friendIds.length - validIds.length + concurrentDuplicates,
     });
   } catch (e) {
     console.error("[share POST]", e);

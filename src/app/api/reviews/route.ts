@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getServerUserId } from "@/lib/session";
 
@@ -63,17 +64,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const review = await db.review.create({
-      data: {
-        userId,
-        rating: Math.round(rating),
-        comment: comment?.trim() || null,
-        isApproved: false, // admin must approve before it shows on landing
-      },
-      include: {
-        user: { select: { name: true, avatar: true } },
-      },
-    });
+    let review;
+    try {
+      review = await db.review.create({
+        data: {
+          userId,
+          rating: Math.round(rating),
+          comment: comment?.trim() || null,
+          isApproved: false, // admin must approve before it shows on landing
+        },
+        include: {
+          user: { select: { name: true, avatar: true } },
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+        return NextResponse.json(
+          { error: "You've already reviewed NostalgiaNet++. Thank you!" },
+          { status: 409 }
+        );
+      }
+      throw e;
+    }
 
     // Notify all admins that a new review was submitted
     const admins = await db.user.findMany({

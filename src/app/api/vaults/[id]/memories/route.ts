@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getServerUserId } from "@/lib/session";
+import { hasExactlyOneMemoryParent } from "@/lib/memory-association";
 
 // Add memories (photos/videos) to an EXISTING vault.
 // Access: vault owner OR any contributor on the vault's VaultContributor table.
@@ -51,12 +52,19 @@ export async function POST(
 
     const body = await req.json();
     const { memories } = body as {
-      memories: { type: string; url: string; caption?: string }[];
+      memories: { type: string; url: string; caption?: string; vaultId?: string | null; albumId?: string | null }[];
     };
 
     if (!memories || !Array.isArray(memories) || memories.length === 0) {
       return NextResponse.json(
         { error: "No memories provided" },
+        { status: 400 }
+      );
+    }
+
+    if (memories.some((memory) => !hasExactlyOneMemoryParent(memory, vault.id, null))) {
+      return NextResponse.json(
+        { error: "Each memory must belong to exactly one vault or album" },
         { status: 400 }
       );
     }

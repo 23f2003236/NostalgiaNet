@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { X, Mail, Lock, User, Loader2, ArrowRight, Sparkles } from "lucide-react";
@@ -16,6 +17,7 @@ export function AuthModal({
   onClose: () => void;
   initialMode?: "login" | "signup";
 }) {
+  const router = useRouter();
   const [authMode, setAuthMode] = useState<"login" | "signup">(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -107,10 +109,10 @@ export function AuthModal({
         window.history.replaceState({}, "", url.toString());
       }
 
-      // Hard refresh so useSession() picks up the new cookie.
+      // Navigate to dashboard so useSession() picks up the new cookie.
       // We pass `authed=1` so the page can render a loading screen instead
       // of flashing the landing page during session fetch.
-      window.location.href = "/?authed=1";
+      router.push("/?authed=1");
     } catch (err) {
       toast.error("Something went wrong. Please try again.");
       setLoading(false);
@@ -162,7 +164,7 @@ export function AuthModal({
         return;
       }
       toast.success("Welcome! Your demo account is ready.");
-      window.location.href = "/?authed=1";
+      router.push("/?authed=1");
     } catch {
       toast.error("Could not start demo. Try again.");
       setLoading(false);

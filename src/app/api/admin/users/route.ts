@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getServerUserId } from "@/lib/session";
+import { cleanupBlobUrls } from "@/lib/blob-cleanup";
 
 async function requireAdmin() {
   const userId = await getServerUserId();
@@ -62,6 +63,25 @@ export async function DELETE(req: NextRequest) {
   if (target.role === "ADMIN") {
     return NextResponse.json({ error: "Can't delete another admin" }, { status: 400 });
   }
+  const [memories, vaults, albums] = await Promise.all([
+    db.memory.findMany({
+      where: {
+        OR: [
+          { vault: { userId: targetId } },
+          { album: { userId: targetId } },
+        ],
+      },
+      select: { url: true },
+    }),
+    db.vault.findMany({ where: { userId: targetId }, select: { coverImage: true } }),
+    db.album.findMany({ where: { userId: targetId }, select: { coverImage: true } }),
+  ]);
   await db.user.delete({ where: { id: targetId } });
+  await cleanupBlobUrls([
+    target.avatar,
+    ...memories.map((memory) => memory.url),
+    ...vaults.map((vault) => vault.coverImage),
+    ...albums.map((album) => album.coverImage),
+  ]);
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getServerUserId } from "@/lib/session";
+import { cleanupBlobUrls } from "@/lib/blob-cleanup";
+import { hasExactlyOneMemoryParent } from "@/lib/memory-association";
 
 export async function GET(req: NextRequest) {
   try {
@@ -48,12 +50,19 @@ export async function POST(req: NextRequest) {
       description?: string;
       coverImage?: string;
       isPublic?: boolean;
-      memories?: { type: string; url: string; caption?: string }[];
+      memories?: { type: string; url: string; caption?: string; vaultId?: string | null; albumId?: string | null }[];
     };
 
     if (!title?.trim()) {
       return NextResponse.json(
         { error: "Title is required" },
+        { status: 400 }
+      );
+    }
+
+    if (memories?.some((memory) => !hasExactlyOneMemoryParent(memory, null, "new-album"))) {
+      return NextResponse.json(
+        { error: "Each memory must belong to exactly one vault or album" },
         { status: 400 }
       );
     }
@@ -96,11 +105,15 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
-    const album = await db.album.findUnique({ where: { id } });
+    const album = await db.album.findUnique({
+      where: { id },
+      include: { memories: { select: { url: true } } },
+    });
     if (!album || album.userId !== userId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     await db.album.delete({ where: { id } });
+    await cleanupBlobUrls([album.coverImage, ...album.memories.map((memory) => memory.url)]);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[albums DELETE]", e);

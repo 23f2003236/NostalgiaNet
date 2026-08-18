@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getServerUserId } from "@/lib/session";
 
@@ -141,9 +142,17 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      const friendship = await db.friendship.create({
-        data: { senderId: userId, receiverId: receiver.id, status: "PENDING" },
-      });
+      let friendship;
+      try {
+        friendship = await db.friendship.create({
+          data: { senderId: userId, receiverId: receiver.id, status: "PENDING" },
+        });
+      } catch (e) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+          return NextResponse.json({ error: "A friend request already exists" }, { status: 409 });
+        }
+        throw e;
+      }
       return NextResponse.json({ friendship });
     }
 

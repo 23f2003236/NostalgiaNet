@@ -352,8 +352,8 @@ function CreateAlbumModal({
       setUploaded((prev) => [...prev, ...result.files.map((f) => ({ url: f.url, type: f.type }))]);
       setFiles((prev) => [...prev, ...newFiles]);
       toast.success(`${newFiles.length} file${newFiles.length > 1 ? "s" : ""} added`);
-    } catch {
-      toast.error("Upload failed. Please try again.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }

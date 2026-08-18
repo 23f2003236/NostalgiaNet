@@ -240,7 +240,7 @@ function CreateVaultModal({
       setFiles((prev) => [...prev, ...newFiles]);
       toast.success(`${newFiles.length} file${newFiles.length > 1 ? "s" : ""} added`);
     } catch (e) {
-      toast.error("Upload failed. Please try again.");
+      toast.error(e instanceof Error ? e.message : "Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }

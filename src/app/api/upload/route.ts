@@ -30,6 +30,32 @@ function getContentType(ext: string): string {
   return map[ext] || "application/octet-stream";
 }
 
+function hasFileSignature(buf: Buffer, ext: string): boolean {
+  const startsWith = (...bytes: number[]) =>
+    buf.length >= bytes.length && bytes.every((byte, index) => buf[index] === byte);
+  const hasFtyp = buf.length >= 12 && buf.toString("ascii", 4, 8) === "ftyp";
+
+  switch (ext) {
+    case ".jpg":
+    case ".jpeg":
+      return startsWith(0xff, 0xd8, 0xff);
+    case ".png":
+      return startsWith(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+    case ".gif":
+      return buf.toString("ascii", 0, 6) === "GIF87a" || buf.toString("ascii", 0, 6) === "GIF89a";
+    case ".webp":
+      return buf.length >= 12 && buf.toString("ascii", 0, 4) === "RIFF" && buf.toString("ascii", 8, 12) === "WEBP";
+    case ".mp4":
+      return hasFtyp && buf.toString("ascii", 8, 12) !== "qt  ";
+    case ".mov":
+      return hasFtyp && buf.toString("ascii", 8, 12) === "qt  ";
+    case ".webm":
+      return startsWith(0x1a, 0x45, 0xdf, 0xa3);
+    default:
+      return false;
+  }
+}
+
 // STORAGE STRATEGY (3-tier fallback):
 // 1. Vercel Blob (BLOB_READ_WRITE_TOKEN is set) — production on Vercel
 // 2. Local filesystem (public/uploads/) — local dev, works if writable
@@ -117,6 +143,12 @@ export async function POST(req: NextRequest) {
       }
 
       const buf = Buffer.from(await f.arrayBuffer());
+      if (!hasFileSignature(buf, ext)) {
+        return NextResponse.json(
+          { error: `${f.name}: file content does not match its ${ext} extension.` },
+          { status: 415 }
+        );
+      }
       const contentType = getContentType(ext);
       let url: string;
       let storageMethod = "unknown";

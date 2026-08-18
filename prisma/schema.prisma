@@ -139,6 +139,8 @@ model Friendship {
 
   sender   User @relation("sender",  fields: [senderId],   references: [id], onDelete: Cascade)
   receiver User @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
 }
 
 model Share {
@@ -151,6 +153,8 @@ model Share {
   vault      Vault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
   sharer     User  @relation("sharer",    fields: [sharedById],   references: [id], onDelete: Cascade)
   recipient  User  @relation("recipient", fields: [sharedWithId], references: [id], onDelete: Cascade)
+
+  @@unique([vaultId, sharedWithId])
 }
 
 model Notification {
@@ -201,4 +205,6 @@ model Review {
   createdAt  DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
 }
