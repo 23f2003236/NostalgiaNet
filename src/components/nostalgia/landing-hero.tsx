@@ -80,8 +80,8 @@ export function LandingHero({
             transition={{ duration: 1, delay: 0.5 }}
             className="mt-16 grid grid-cols-3 gap-4 max-w-2xl mx-auto pt-8 vintage-divider"
           >
-            <Stat label="Memories sealed" value="42,180" />
-            <Stat label="Capsules unlocked" value="8,904" />
+            <Stat label="Memories sealed" value="143" />
+            <Stat label="Capsules unlocked" value="31" />
             <Stat label="Years of joy" value="∞" />
           </motion.div>
         </div>

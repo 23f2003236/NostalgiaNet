@@ -36,10 +36,10 @@ export const metadata: Metadata = {
 const themeInitScript = `
 (function() {
   try {
-    var theme = localStorage.getItem('nostalgianet-theme') || 'sepia';
+    var theme = localStorage.getItem('nostalgianet-theme') || 'slate';
     var mode = localStorage.getItem('nostalgianet-color-mode') || 'light';
     var root = document.documentElement;
-    if (theme && theme !== 'sepia') root.setAttribute('data-theme', theme);
+    root.setAttribute('data-theme', theme);
     if (mode === 'dark') root.classList.add('dark');
   } catch (e) {}
 })();

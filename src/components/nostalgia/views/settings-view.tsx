@@ -35,20 +35,15 @@ const THEMES = [
 // script in layout.tsx can apply it before hydration (prevents flash).
 function applyTheme(themeKey: string) {
   if (typeof window === "undefined") return;
-  const root = document.documentElement;
-  if (themeKey === "sepia") {
-    root.removeAttribute("data-theme");
-  } else {
-    root.setAttribute("data-theme", themeKey);
-  }
+  document.documentElement.setAttribute("data-theme", themeKey);
   try {
     localStorage.setItem("nostalgianet-theme", themeKey);
   } catch {}
 }
 
 function getCurrentTheme(): string {
-  if (typeof window === "undefined") return "sepia";
-  return localStorage.getItem("nostalgianet-theme") || "sepia";
+  if (typeof window === "undefined") return "slate";
+  return localStorage.getItem("nostalgianet-theme") || "slate";
 }
 
 export function SettingsView() {
@@ -261,34 +256,46 @@ export function SettingsView() {
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {THEMES.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => handleThemeChange(t.key)}
-                className={cn(
-                  "relative p-3 rounded-2xl border-2 transition-all text-left",
-                  selectedTheme === t.key
-                    ? "border-primary shadow-warm"
-                    : "border-border hover:border-primary/40"
-                )}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div
-                    className="size-6 rounded-full"
-                    style={{ background: t.color }}
-                  />
-                  <div
-                    className="size-4 rounded-full"
-                    style={{ background: t.accent }}
-                  />
-                </div>
-                <div className="text-sm font-medium">{t.label}</div>
-                <div className="text-[10px] text-muted-foreground">{t.desc}</div>
-                {selectedTheme === t.key && (
-                  <div className="absolute top-2 right-2 size-5 rounded-full bg-primary text-primary-foreground grid place-items-center">
-                    <Check className="size-3" />
+              <div key={t.key} className="relative group">
+                {/* Hover preview card — appears above */}
+                <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  <div className="bg-card border border-border/80 rounded-xl p-3 shadow-warm w-[140px]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="size-5 rounded-full border border-border/40" style={{ background: t.color }} />
+                      <div className="size-4 rounded-full border border-border/40" style={{ background: t.accent }} />
+                    </div>
+                    <div className="text-xs font-semibold leading-tight">{t.label}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{t.desc}</div>
                   </div>
-                )}
-              </button>
+                </div>
+                <button
+                  onClick={() => handleThemeChange(t.key)}
+                  className={cn(
+                    "relative w-full p-3 rounded-2xl border-2 transition-all text-left",
+                    selectedTheme === t.key
+                      ? "border-primary shadow-warm"
+                      : "border-border hover:border-primary/40"
+                  )}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div
+                      className="size-6 rounded-full"
+                      style={{ background: t.color }}
+                    />
+                    <div
+                      className="size-4 rounded-full"
+                      style={{ background: t.accent }}
+                    />
+                  </div>
+                  <div className="text-sm font-medium">{t.label}</div>
+                  <div className="text-[10px] text-muted-foreground">{t.desc}</div>
+                  {selectedTheme === t.key && (
+                    <div className="absolute top-2 right-2 size-5 rounded-full bg-primary text-primary-foreground grid place-items-center">
+                      <Check className="size-3" />
+                    </div>
+                  )}
+                </button>
+              </div>
             ))}
           </div>
 

@@ -1,56 +1,27 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Lock } from "lucide-react";
+import { toast } from "sonner";
 
-const PLANS = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    desc: "Begin your first capsule today.",
-    features: [
-      "Up to 3 active capsules",
-      "100 MB storage",
-      "Photos & notes",
-      "Memory calendar",
-      "Basic journaling",
-    ],
-    cta: "Get started",
-    highlight: false,
-  },
-  {
-    name: "Keeper",
-    price: "$3",
-    period: "/month",
-    desc: "For the memory-keeper who's all in.",
-    features: [
-      "Unlimited capsules",
-      "10 GB storage",
-      "Videos included",
-      "Friends & shared capsules",
-      "Advanced mood timeline",
-      "Early access to new features",
-    ],
-    cta: "Start Keeper",
-    highlight: true,
-  },
-  {
-    name: "Family",
-    price: "$6",
-    period: "/month",
-    desc: "A shared vault for the whole family.",
-    features: [
-      "Everything in Keeper",
-      "50 GB storage",
-      "Up to 6 family members",
-      "Shared family capsules",
-      "Memory recap each year",
-      "Priority support",
-    ],
-    cta: "Start Family",
-    highlight: false,
-  },
+const FREE_FEATURES = [
+  "3 active TimeVaults",
+  "3 photos per day during free phase",
+  "Photo Albums & journaling",
+  "Friends & shared capsules",
+  "Memory calendar & countdowns",
+  "7 themes + dark mode included",
+];
+
+// Premium features: most visible, 2 blurred as teasers
+const PREMIUM_FEATURES: { label: string; blurred?: boolean }[] = [
+  { label: "Unlimited TimeVaults & photo uploads" },
+  { label: "Video support up to 500 MB per file" },
+  { label: "10 GB personal storage" },
+  { label: "Collaborative vault invites & sharing" },
+  { label: "Priority email support" },
+  { label: "Custom vault cover art & personalization", blurred: true },
+  { label: "One more thing we're not telling yet", blurred: true },
 ];
 
 export function LandingPricing({ onGetStarted }: { onGetStarted: () => void }) {
@@ -85,58 +56,116 @@ export function LandingPricing({ onGetStarted }: { onGetStarted: () => void }) {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mt-5 text-muted-foreground font-serif text-lg"
           >
-            Free forever to start. Upgrade only if you fall in love. Cancel
-            anytime — your memories always stay yours.
+            Free while we build. One simple upgrade when we&apos;re ready.
+            Your memories always stay yours.
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {PLANS.map((p, i) => (
-            <motion.div
-              key={p.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.55, delay: i * 0.08 }}
-              className={`relative p-7 rounded-3xl border transition-all hover:-translate-y-1 ${
-                p.highlight
-                  ? "bg-card border-primary/40 shadow-warm scale-[1.02]"
-                  : "bg-card border-border/60 hover:border-primary/30"
-              }`}
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* Free tier */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.55 }}
+            className="relative p-7 rounded-3xl border bg-card border-border/60 hover:border-primary/30 hover:-translate-y-1 transition-all"
+          >
+            <div className="mb-2 font-display text-xl font-semibold">Free</div>
+            <div className="text-sm text-muted-foreground mb-5">
+              Begin your first capsule today. No card required.
+            </div>
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="font-display text-4xl font-semibold text-gradient-warm">
+                $0
+              </span>
+              <span className="text-sm text-muted-foreground">/ always</span>
+            </div>
+            <div className="text-xs text-accent font-medium mb-6">
+              Free until January 2027
+            </div>
+            <ul className="space-y-2.5 mb-7">
+              {FREE_FEATURES.map((f) => (
+                <li key={f} className="flex items-start gap-2.5 text-sm">
+                  <Check className="size-4 text-accent mt-0.5 shrink-0" />
+                  <span className="text-foreground/85">{f}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={onGetStarted}
+              className="w-full py-3 rounded-full font-medium text-sm transition-all border border-border bg-background hover:border-primary/40"
             >
-              {p.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold tracking-wide uppercase">
-                  Most loved
-                </div>
-              )}
-              <div className="mb-2 font-display text-xl font-semibold">{p.name}</div>
-              <div className="text-sm text-muted-foreground mb-5">{p.desc}</div>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="font-display text-4xl font-semibold text-gradient-warm">
-                  {p.price}
-                </span>
-                <span className="text-sm text-muted-foreground">{p.period}</span>
+              Get started free
+            </button>
+          </motion.div>
+
+          {/* $12 Premium — teaser with real feature list */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.55, delay: 0.08 }}
+            className="relative p-7 rounded-3xl border bg-card border-primary/40 shadow-warm scale-[1.02] hover:-translate-y-1 transition-all"
+          >
+            {/* "Coming soon" badge */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-[10px] font-semibold tracking-wide uppercase text-accent-foreground whitespace-nowrap">
+              Coming Jan 2027
+            </div>
+
+            {/* Subtle shimmer overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-accent/[0.05] pointer-events-none" />
+
+            <div className="relative">
+              <div className="mb-2 font-display text-xl font-semibold">Premium</div>
+              <div className="text-sm text-muted-foreground mb-5">
+                For memory-keepers who want it all.
               </div>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="font-display text-4xl font-semibold text-gradient-warm">
+                  $12
+                </span>
+                <span className="text-sm text-muted-foreground">/ month</span>
+              </div>
+              <div className="text-xs text-muted-foreground mb-6">
+                Details finalising — announcing January 2027
+              </div>
+
+              {/* Feature list — most visible, 2 blurred as teasers */}
               <ul className="space-y-2.5 mb-7">
-                {p.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm">
-                    <Check className="size-4 text-accent mt-0.5 shrink-0" />
-                    <span className="text-foreground/85">{f}</span>
+                {PREMIUM_FEATURES.map((f) => (
+                  <li key={f.label} className="flex items-start gap-2.5 text-sm">
+                    {f.blurred ? (
+                      <Lock className="size-4 text-primary/40 mt-0.5 shrink-0" />
+                    ) : (
+                      <Check className="size-4 text-accent mt-0.5 shrink-0" />
+                    )}
+                    <span
+                      className={
+                        f.blurred
+                          ? "text-foreground/85 select-none"
+                          : "text-foreground/85"
+                      }
+                      style={f.blurred ? { filter: "blur(4px)" } : undefined}
+                    >
+                      {f.label}
+                    </span>
                   </li>
                 ))}
               </ul>
+
               <button
-                onClick={onGetStarted}
-                className={`w-full py-3 rounded-full font-medium text-sm transition-all ${
-                  p.highlight
-                    ? "bg-primary text-primary-foreground shadow-warm hover:shadow-glow"
-                    : "border border-border bg-background hover:border-primary/40"
-                }`}
+                onClick={() =>
+                  toast.info(
+                    "We'll announce Premium details closer to January 2027. Stay tuned!",
+                    { duration: 6000 }
+                  )
+                }
+                className="w-full py-3 rounded-full font-medium text-sm transition-all bg-primary text-primary-foreground shadow-warm hover:shadow-glow"
               >
-                {p.cta}
+                Notify me when it launches
               </button>
-            </motion.div>
-          ))}
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>

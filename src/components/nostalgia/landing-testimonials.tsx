@@ -6,7 +6,7 @@ import { Star, Quote } from "lucide-react";
 const STORIES = [
   {
     quote:
-      "I sealed a letter to my daughter on her third birthday, set to open when she turns eighteen. Fifteen years from now, she'll read who I was the day she was three.",
+      "My daughter turned 3 last March and I made a vault that day — wrote her a letter, added a video of her trying to eat spaghetti. It unlocks when she's 18. I honestly teared up just setting the date.",
     name: "Maya R.",
     role: "Mother of one",
     rating: 5,
@@ -14,7 +14,7 @@ const STORIES = [
   },
   {
     quote:
-      "My best friend and I made a shared capsule the night before he moved abroad. We opened it together three years later — tears, laughter, and a video of us at 22 we'd forgotten existed.",
+      "My friend moved to Berlin and we made a shared vault the night before he left. Opened it three years later on a video call. There was a voice memo neither of us remembered recording. That was a lot.",
     name: "Daniel K.",
     role: "Architect, Berlin",
     rating: 5,
@@ -22,7 +22,7 @@ const STORIES = [
   },
   {
     quote:
-      "Every New Year I write a letter to my future self, sealed for exactly one year. NostalgiaNet++ turned that little ritual into something beautiful — and the calendar reminds me to open each one.",
+      "Every January 1st I make a new one — photos from the past year, a few notes, locked for 12 months. It's the one thing I actually look forward to opening. The calendar reminder is a nice touch too.",
     name: "Priya S.",
     role: "Teacher, Mumbai",
     rating: 5,

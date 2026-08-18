@@ -82,7 +82,7 @@ export function AppShell() {
           <Logo className="size-9" />
           <div>
             <div className="font-display text-lg font-semibold leading-none">
-              Nostalgia<span className="text-accent">Net</span>
+              Nostalgia<span className="text-accent">Net</span>++
             </div>
             <div className="text-[10px] text-muted-foreground mt-1">
               Memories live forever
@@ -136,8 +136,12 @@ export function AppShell() {
 
         <div className="p-3 border-t border-border/60">
           <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/60">
-            <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-semibold text-sm shrink-0">
-              {user.name?.[0]?.toUpperCase() || "U"}
+            <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-semibold text-sm shrink-0 overflow-hidden">
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.name || "User"} className="w-full h-full object-cover" />
+              ) : (
+                user.name?.[0]?.toUpperCase() || "U"
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">{user.name}</div>
@@ -190,7 +194,7 @@ export function AppShell() {
                 <div className="flex items-center gap-2.5">
                   <Logo className="size-9" />
                   <div className="font-display text-lg font-semibold leading-none">
-                    Nostalgia<span className="text-accent">Net</span>
+                    Nostalgia<span className="text-accent">Net</span>++
                   </div>
                 </div>
                 <button
@@ -278,8 +282,12 @@ export function AppShell() {
             >
               {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
             </button>
-            <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-semibold text-sm">
-              {user.name?.[0]?.toUpperCase() || "U"}
+            <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-semibold text-sm overflow-hidden">
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.name || "User"} className="w-full h-full object-cover" />
+              ) : (
+                user.name?.[0]?.toUpperCase() || "U"
+              )}
             </div>
           </div>
         </header>

@@ -7,6 +7,7 @@ import { LandingHero } from "@/components/nostalgia/landing-hero";
 import { LandingFeatures } from "@/components/nostalgia/landing-features";
 import { LandingHow } from "@/components/nostalgia/landing-how";
 import { LandingTestimonials } from "@/components/nostalgia/landing-testimonials";
+import { LandingPricing } from "@/components/nostalgia/landing-pricing";
 import { LandingFooter } from "@/components/nostalgia/landing-footer";
 import { LandingFaq } from "@/components/nostalgia/landing-faq";
 import { ReviewSlider } from "@/components/nostalgia/review-slider";
@@ -63,9 +64,27 @@ export default function Home() {
     setAuthOpen(true);
   };
 
+  // Track whether the user has ever been fully authenticated this session.
+  // This prevents a landing-page flash when update() briefly clears session.user
+  // (e.g., after uploading a profile picture) while status stays "authenticated".
+  const [everAuthenticated, setEverAuthenticated] = useState(false);
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setEverAuthenticated(true);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [status, session]);
+
   // If logged in, show the app shell
   if (status === "authenticated" && session?.user) {
     return <AppShell />;
+  }
+
+  // If we were authenticated and the session is transitioning (update() in flight),
+  // show the loading screen instead of the landing page.
+  if (everAuthenticated && status !== "unauthenticated") {
+    return <AuthLoadingScreen />;
   }
 
   // If user just submitted auth, show a loading screen while session loads.
@@ -87,6 +106,7 @@ export default function Home() {
         <LandingFeatures />
         <LandingHow />
         <LandingTestimonials />
+        <LandingPricing onGetStarted={() => handleGetStarted("signup")} />
         <ReviewSlider />
         <LandingFaq />
         <UnderConstructionBanner />

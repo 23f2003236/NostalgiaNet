@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: "Is it free?",
-    a: "Yes! NostalgiaNet++ is completely free during the construction phase (until January 2027). You can sign up, create vaults, upload up to 3 photos per day, write journals, and invite friends — all for ₹0. Paid plans (Keeper at $3/month, Family at $6/month) will launch in January 2027 with unlimited uploads, video storage, and more.",
+    a: "Yes! NostalgiaNet++ is completely free during the construction phase (until January 2027). You can sign up, create vaults, upload up to 3 photos per day, write journals, and invite friends — all for ₹0. A single $12/month Premium plan is coming in January 2027 — details will be announced closer to launch.",
   },
   {
     q: "Can I share my vaults with friends?",
