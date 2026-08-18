@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Clock, Sparkles, Heart, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/icons/logo";
 
+
 export function LandingHero({
   onGetStarted,
 }: {
@@ -78,7 +79,7 @@ export function LandingHero({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.5 }}
-            className="mt-16 grid grid-cols-3 gap-4 max-w-2xl mx-auto pt-8 vintage-divider"
+            className="mt-16 mb-12 grid grid-cols-3 gap-4 max-w-2xl mx-auto pt-8 vintage-divider"
           >
             <Stat label="Memories sealed" value="143" />
             <Stat label="Capsules unlocked" value="31" />
@@ -109,36 +110,36 @@ function Stat({ value, label }: { value: string; label: string }) {
 function FloatingPolaroids() {
   const items = [
     {
-      top: "12%",
-      left: "8%",
-      rotate: -8,
+      top: "10%",
+      left: "5%",
+      rotate: -7,
       delay: 0,
-      label: "Summer '19",
-      bg: "linear-gradient(135deg, oklch(0.85 0.10 70), oklch(0.75 0.13 50))",
+      label: "Summer night",
+      src: "/images/altinay-dinc-LluELtL5mK4-unsplash.jpg",
     },
     {
-      top: "20%",
-      right: "10%",
+      top: "18%",
+      right: "6%",
       rotate: 6,
       delay: 1,
-      label: "First snow",
-      bg: "linear-gradient(135deg, oklch(0.85 0.05 250), oklch(0.75 0.10 220))",
+      label: "First snow drive",
+      src: "/images/bradley-dunn-qijkjkJm63c-unsplash.jpg",
     },
     {
-      bottom: "18%",
-      left: "12%",
+      bottom: "16%",
+      left: "8%",
       rotate: 5,
       delay: 2,
-      label: "Grandma's house",
-      bg: "linear-gradient(135deg, oklch(0.85 0.10 30), oklch(0.70 0.13 45))",
+      label: "Last winter trip",
+      src: "/images/ran-liwen-rzYNrA9XK0c-unsplash.jpg",
     },
     {
-      bottom: "22%",
-      right: "8%",
-      rotate: -7,
+      bottom: "20%",
+      right: "5%",
+      rotate: -6,
       delay: 3,
-      label: "Prom night",
-      bg: "linear-gradient(135deg, oklch(0.80 0.12 320), oklch(0.65 0.16 350))",
+      label: "Beach day '21",
+      src: "/images/vitolda-klein-Nru3PmN8TjI-unsplash.jpg",
     },
   ];
 
@@ -147,32 +148,44 @@ function FloatingPolaroids() {
       {items.map((it, i) => (
         <motion.div
           key={i}
-          initial={{ opacity: 0, scale: 0.7, rotate: it.rotate }}
-          animate={{
-            opacity: 0.85,
-            scale: 1,
-            rotate: it.rotate,
-          }}
-          transition={{ duration: 1, delay: 0.5 + it.delay * 0.2 }}
-          className="absolute polaroid w-32 lg:w-40"
+          initial={{ opacity: 0, scale: 0.75, rotate: it.rotate }}
+          animate={{ opacity: 1, scale: 1, rotate: it.rotate }}
+          transition={{ duration: 0.9, delay: 0.4 + it.delay * 0.18 }}
+          className="absolute polaroid"
           style={{
+            width: "clamp(120px, 11vw, 164px)",
             top: it.top,
-            left: it.left,
+            left: (it as { left?: string }).left,
             right: (it as { right?: string }).right,
             bottom: (it as { bottom?: string }).bottom,
           }}
         >
-          <div className="aspect-square w-full rounded-sm" style={{ background: it.bg }} />
-          <div className="text-center text-[10px] text-muted-foreground mt-2 font-serif italic">
-            {it.label}
-          </div>
           <motion.div
-            animate={{ y: [0, -8, 0], rotate: [it.rotate, it.rotate + 1.5, it.rotate] }}
-            transition={{ duration: 6, repeat: Infinity, delay: it.delay }}
-            className="absolute inset-0"
-          />
+            animate={{
+              y: [0, -7, 0],
+              rotate: [it.rotate, it.rotate + 1.5, it.rotate],
+            }}
+            transition={{ duration: 6, repeat: Infinity, delay: it.delay * 0.5, ease: "easeInOut" }}
+            className="w-full"
+          >
+            {/* Photo */}
+            <div className="w-full aspect-[4/3] rounded-sm overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={it.src}
+                alt={it.label}
+                className="w-full h-full object-cover"
+                draggable={false}
+              />
+            </div>
+            {/* Caption */}
+            <div className="text-center text-[10px] text-muted-foreground mt-2 font-serif italic leading-tight px-1">
+              {it.label}
+            </div>
+          </motion.div>
         </motion.div>
       ))}
     </div>
   );
 }
+

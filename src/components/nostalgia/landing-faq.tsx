@@ -11,11 +11,11 @@ const FAQS = [
   },
   {
     q: "Who made this website?",
-    a: "This website was built by Rohan Kumar, who is currently pursuing the IITM BS Degree (Diploma term). The development process used a powerful AI-assisted workflow — zcode (an AI coding agent) wrote the code blocks, GLM (the AI model) handled the overall architecture and publishing for demo purposes, and Claude (another AI) was used for debugging and reviewing errors. We plan to make this a real-world app once all features are complete.",
+    a: "This website was built by Rohan Kumar, who is currently pursuing the IITM BS Degree (Diploma term). The development process used a powerful AI-assisted workflow — Antigravity IDE (an AI coding agent) wrote the code blocks, GLM (the AI model) handled the overall architecture and publishing for demo purposes, and Claude (another AI) was used for debugging and reviewing errors. We plan to make this a real-world app once all features are complete.",
   },
   {
     q: "What is the owner's background?",
-    a: "Rohan Kumar is a student currently enrolled in the IITM BS Degree program, in the Diploma term. He's passionate about building products that help people preserve what matters most — their memories. NostalgiaNet++ is his vision of a warmer, more intentional alternative to fast-paced social media — a place where time itself is the feature, not the enemy.",
+    a: "He is a Data Science undergraduate at IIT Madras, passionate about building practical AI/ML and full-stack applications. He enjoys taking ideas from problem → architecture → implementation → deployment, with strong interest in Machine Learning, Deep Learning, and Generative AI. NostalgiaNet++ is his vision of a warmer, more intentional alternative to fast-paced social media — a place where time itself is the feature, not the enemy.",
   },
   {
     q: "How does it work?",
@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: "Is it free?",
-    a: "Yes! NostalgiaNet++ is completely free during the construction phase (until January 2027). You can sign up, create vaults, upload up to 3 photos per day, write journals, and invite friends — all for ₹0. A single $12/month Premium plan is coming in January 2027 — details will be announced closer to launch.",
+    a: "Yes! NostalgiaNet++ is completely free during the construction phase (until January 2027). You can sign up, create vaults, upload up to 3 photos per day, write journals, and invite friends — all for $0. Two paid tiers — Basic and Premium — are coming in January 2027. Exact pricing is being finalised and will be announced closer to launch.",
   },
   {
     q: "Can I share my vaults with friends?",
@@ -139,12 +139,12 @@ export function LandingFaq() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Code2 className="size-4 text-accent" />
-              <span>Built with <span className="font-medium text-foreground">zcode</span></span>
+              <span>Built with <span className="font-medium text-foreground">Antigravity IDE</span></span>
             </div>
             <div className="hidden sm:block w-px h-4 bg-border" />
             <div className="flex items-center gap-2 text-muted-foreground">
               <Rocket className="size-4 text-accent" />
-              <span>Published by <span className="font-medium text-foreground">GLM</span></span>
+              <span>Architecture designed by <span className="font-medium text-foreground">GLM</span></span>
             </div>
             <div className="hidden sm:block w-px h-4 bg-border" />
             <div className="flex items-center gap-2 text-muted-foreground">
