@@ -138,6 +138,14 @@ export function AuthModal({
         return;
       }
 
+      // Await DB warm-up before redirecting to Google.
+      // We race the actual warmup response against a 2500ms safety timeout
+      // so we never hang the flow if Neon is slow — but we also don't just
+      // guess with a fixed delay. The button spinner covers this wait.
+      const warmup = fetch("/api/warmup").catch(() => null);
+      const timeout = new Promise<null>((r) => setTimeout(() => r(null), 2500));
+      await Promise.race([warmup, timeout]);
+
       await signIn("google", { callbackUrl: "/?authed=1" });
     } catch {
       toast.error("Google sign-in failed");

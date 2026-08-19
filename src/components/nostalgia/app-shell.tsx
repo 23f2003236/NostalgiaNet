@@ -94,14 +94,18 @@ export function AppShell() {
   const themeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
     try {
       /* eslint-disable react-hooks/set-state-in-effect */
-      setDontAskLogout(localStorage.getItem("nostalgianet-skip-logout") === "true");
+      // Key by user ID so each account has its own "don't ask me again" setting.
+      // Without this, User A's preference bleeds into User B on the same device.
+      setDontAskLogout(localStorage.getItem(`nostalgianet-skip-logout-${userId}`) === "true");
       const saved = localStorage.getItem("nostalgianet-theme") || "slate";
       setActiveTheme(saved);
       /* eslint-enable react-hooks/set-state-in-effect */
     } catch {}
-  }, []);
+  }, [session?.user?.id]); // re-read when user changes (different account, same browser)
 
   // Close theme picker on outside click
   useEffect(() => {
@@ -143,7 +147,11 @@ export function AppShell() {
   const handleLogoutConfirm = (dontAsk: boolean) => {
     setLogoutOpen(false);
     if (dontAsk) {
-      try { localStorage.setItem("nostalgianet-skip-logout", "true"); } catch {}
+      try {
+        // Write to the user-specific key so this preference doesn't bleed
+        // into other accounts that share the same browser.
+        localStorage.setItem(`nostalgianet-skip-logout-${user.id}`, "true");
+      } catch {}
       setDontAskLogout(true);
     }
     doLogout();
