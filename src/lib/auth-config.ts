@@ -181,6 +181,7 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
+        // First login — hydrate full token from DB
         const dbUser = await db.user.findUnique({
           where: { email: user.email! },
           select: {
@@ -197,6 +198,20 @@ export const authOptions: NextAuthOptions = {
           token.uid = dbUser.id;
           token.name = dbUser.name;
           token.email = dbUser.email;
+          token.avatar = dbUser.avatar;
+          token.bio = dbUser.bio;
+          token.plan = dbUser.plan;
+          token.role = dbUser.role;
+        }
+      } else if (token.uid) {
+        // Session refresh (update() called) — re-fetch mutable fields so
+        // avatar/name/bio changes propagate to all clients immediately.
+        const dbUser = await db.user.findUnique({
+          where: { id: token.uid as string },
+          select: { name: true, avatar: true, bio: true, plan: true, role: true },
+        });
+        if (dbUser) {
+          token.name = dbUser.name;
           token.avatar = dbUser.avatar;
           token.bio = dbUser.bio;
           token.plan = dbUser.plan;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, signOut } from "next-auth/react";
 import {
@@ -17,10 +17,11 @@ import {
   ChevronRight,
   Images,
   Globe2,
-  Bell,
   X,
   Shield,
   Star,
+  Palette,
+  Check,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -39,6 +40,23 @@ import { NotificationsBell } from "@/components/nostalgia/notifications-bell";
 import { HelpBot } from "@/components/nostalgia/help-bot";
 import { ReviewModal } from "@/components/nostalgia/review-modal";
 
+/* ── Color themes (same palette as settings-view) ── */
+const THEMES = [
+  { key: "sepia",    label: "Warm Sepia",     desc: "Original",   color: "oklch(0.55 0.13 55)",  accent: "oklch(0.65 0.13 45)" },
+  { key: "ocean",    label: "Ocean Blue",      desc: "Calm & cool", color: "oklch(0.50 0.15 240)", accent: "oklch(0.60 0.13 200)" },
+  { key: "forest",   label: "Forest Green",    desc: "Earthy",     color: "oklch(0.50 0.12 150)", accent: "oklch(0.62 0.13 165)" },
+  { key: "rose",     label: "Rose Pink",       desc: "Romantic",   color: "oklch(0.55 0.18 10)",  accent: "oklch(0.65 0.15 350)" },
+  { key: "midnight", label: "Midnight Purple", desc: "Premium",    color: "oklch(0.50 0.18 290)", accent: "oklch(0.62 0.18 320)" },
+  { key: "sunset",   label: "Sunset Orange",   desc: "Vibrant",    color: "oklch(0.62 0.20 35)",  accent: "oklch(0.65 0.18 20)" },
+  { key: "slate",    label: "Mono Slate",      desc: "Minimal",    color: "oklch(0.40 0.015 250)", accent: "oklch(0.55 0.02 250)" },
+];
+
+function applyColorTheme(key: string) {
+  if (typeof window === "undefined") return;
+  document.documentElement.setAttribute("data-theme", key);
+  try { localStorage.setItem("nostalgianet-theme", key); } catch {}
+}
+
 export type ViewKey =
   | "dashboard"
   | "vaults"
@@ -51,15 +69,15 @@ export type ViewKey =
   | "admin";
 
 const NAV: { key: ViewKey; label: string; icon: React.ElementType; desc: string; adminOnly?: boolean }[] = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, desc: "Your memory overview" },
-  { key: "vaults", label: "TimeVaults", icon: Lock, desc: "Sealed capsules awaiting their day" },
-  { key: "albums", label: "Albums", icon: Images, desc: "Photo collections you keep open" },
-  { key: "journals", label: "Journal", icon: BookHeart, desc: "Your living diary" },
-  { key: "friends", label: "Friends", icon: Users, desc: "People you remember with" },
-  { key: "calendar", label: "Calendar", icon: CalendarHeart, desc: "Upcoming unlocks" },
-  { key: "discover", label: "Discover", icon: Globe2, desc: "Public capsules from the community" },
-  { key: "settings", label: "Settings", icon: Settings, desc: "Account & preferences" },
-  { key: "admin", label: "Admin Panel", icon: Shield, desc: "Owner-only controls", adminOnly: true },
+  { key: "dashboard", label: "Dashboard",  icon: LayoutDashboard, desc: "Your memory overview" },
+  { key: "vaults",    label: "TimeVaults", icon: Lock,            desc: "Sealed capsules awaiting their day" },
+  { key: "albums",    label: "Albums",     icon: Images,          desc: "Photo collections you keep open" },
+  { key: "journals",  label: "Journal",    icon: BookHeart,       desc: "Your living diary" },
+  { key: "friends",   label: "Friends",    icon: Users,           desc: "People you remember with" },
+  { key: "calendar",  label: "Calendar",   icon: CalendarHeart,   desc: "Upcoming unlocks" },
+  { key: "discover",  label: "Discover",   icon: Globe2,          desc: "Public capsules from the community" },
+  { key: "settings",  label: "Settings",   icon: Settings,        desc: "Account & preferences" },
+  { key: "admin",     label: "Admin Panel", icon: Shield,         desc: "Owner-only controls", adminOnly: true },
 ];
 
 export function AppShell() {
@@ -68,11 +86,67 @@ export function AppShell() {
   const [active, setActive] = useState<ViewKey>("dashboard");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [dontAskLogout, setDontAskLogout] = useState(false);
+  const [themePickerOpen, setThemePickerOpen] = useState(false);
+  const [activeTheme, setActiveTheme] = useState("slate");
+  const themeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setDontAskLogout(localStorage.getItem("nostalgianet-skip-logout") === "true");
+      const saved = localStorage.getItem("nostalgianet-theme") || "slate";
+      setActiveTheme(saved);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    } catch {}
+  }, []);
+
+  // Close theme picker on outside click
+  useEffect(() => {
+    if (!themePickerOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (themeRef.current && !themeRef.current.contains(e.target as Node)) {
+        setThemePickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [themePickerOpen]);
+
+  const handleTheme = (key: string) => {
+    applyColorTheme(key);
+    setActiveTheme(key);
+    setThemePickerOpen(false);
+  };
 
   const user = session?.user;
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
+
+  const doLogout = () => {
+    toast.success("Signed out. See you soon!", { duration: 3000 });
+    setTimeout(() => {
+      // Navigate FIRST — browser starts loading landing page immediately,
+      // so the unauthenticated React re-render never reaches the screen.
+      window.location.href = window.location.origin + "/";
+      // signOut clears the cookie server-side; redirect: false since we
+      // already kicked off the hard navigation above.
+      signOut({ redirect: false });
+    }, 350);
+  };
+
+  const handleLogoutClick = () => {
+    if (dontAskLogout) { doLogout(); } else { setLogoutOpen(true); }
+  };
+
+  const handleLogoutConfirm = (dontAsk: boolean) => {
+    setLogoutOpen(false);
+    if (dontAsk) {
+      try { localStorage.setItem("nostalgianet-skip-logout", "true"); } catch {}
+      setDontAskLogout(true);
+    }
+    doLogout();
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -150,18 +224,7 @@ export function AppShell() {
               </div>
             </div>
             <button
-              onClick={() => {
-                toast.success("Signed out. See you soon!", { duration: 6000 });
-                setTimeout(async () => {
-                  await signOut({ redirect: false });
-                  // Manually redirect to the CURRENT origin's root.
-                  // Don't use callbackUrl="/" because NextAuth constructs it
-                  // using NEXTAUTH_URL env var, which is set to localhost:3000
-                  // — that breaks on z.ai preview / Vercel where the origin
-                  // is different.
-                  window.location.href = window.location.origin + "/";
-                }, 400);
-              }}
+              onClick={handleLogoutClick}
               className="size-8 grid place-items-center rounded-full hover:bg-background text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Sign out"
               title="Sign out"
@@ -227,13 +290,7 @@ export function AppShell() {
               </nav>
               <div className="p-3 border-t border-border/60">
                 <button
-                  onClick={() => {
-                    toast.success("Signed out. See you soon!", { duration: 6000 });
-                    setTimeout(async () => {
-                      await signOut({ redirect: false });
-                      window.location.href = window.location.origin + "/";
-                    }, 400);
-                  }}
+                  onClick={handleLogoutClick}
                   className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm hover:bg-muted"
                 >
                   <LogOut className="size-4" />
@@ -274,20 +331,95 @@ export function AppShell() {
                 year: "numeric",
               })}
             </div>
+
+            {/* Right-side controls */}
             <NotificationsBell />
+
+            {/* ── Color theme picker ── */}
+            <div ref={themeRef} className="relative">
+              <button
+                onClick={() => setThemePickerOpen((v) => !v)}
+                className={cn(
+                  "size-9 grid place-items-center rounded-full hover:bg-muted transition-colors",
+                  themePickerOpen ? "bg-muted text-primary" : "text-foreground"
+                )}
+                aria-label="Change theme"
+                title="Change theme"
+              >
+                <Palette className="size-4" />
+              </button>
+              <AnimatePresence>
+                {themePickerOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute right-0 top-full mt-2 w-52 glass border border-border/60 rounded-2xl p-2.5 shadow-warm z-50"
+                  >
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+                      Theme
+                    </div>
+                    <div className="space-y-0.5">
+                      {THEMES.map((t) => (
+                        <div key={t.key} className="relative group/item">
+                          {/* Hover preview card — appears to the left */}
+                          <div className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-150">
+                            <div className="bg-card border border-border/80 rounded-xl p-3 shadow-warm w-[130px]">
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <div className="size-5 rounded-full border border-border/40" style={{ background: t.color }} />
+                                <div className="size-4 rounded-full border border-border/40" style={{ background: t.accent }} />
+                              </div>
+                              <div className="text-xs font-semibold">{t.label}</div>
+                              <div className="text-[10px] text-muted-foreground">{t.desc}</div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleTheme(t.key)}
+                            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-muted/70 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-1 shrink-0">
+                              <div className="size-4 rounded-full border border-border/30" style={{ background: t.color }} />
+                              <div className="size-3 rounded-full border border-border/30" style={{ background: t.accent }} />
+                            </div>
+                            <span className="text-sm flex-1">{t.label}</span>
+                            {activeTheme === t.key && (
+                              <Check className="size-3.5 text-primary shrink-0" />
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ── Dark / light toggle ── */}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="size-9 grid place-items-center rounded-full hover:bg-muted text-foreground"
-              aria-label="Toggle theme"
+              aria-label="Toggle dark mode"
             >
               {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
             </button>
-            <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-semibold text-sm overflow-hidden">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.name || "User"} className="w-full h-full object-cover" />
-              ) : (
-                user.name?.[0]?.toUpperCase() || "U"
-              )}
+
+            {/* ── Profile avatar with hover tooltip ── */}
+            <div className="relative group">
+              <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-semibold text-sm overflow-hidden cursor-pointer">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name || "User"} className="w-full h-full object-cover" />
+                ) : (
+                  user.name?.[0]?.toUpperCase() || "U"
+                )}
+              </div>
+              {/* Tooltip — appears on hover */}
+              <div className="absolute right-0 top-11 z-50 hidden group-hover:block pointer-events-none">
+                <div className="p-3 rounded-2xl bg-popover border border-border shadow-warm min-w-[180px]">
+                  <div className="text-sm font-semibold truncate">{user.name}</div>
+                  <div className="text-xs text-muted-foreground truncate mt-0.5">{user.email}</div>
+                </div>
+              </div>
             </div>
           </div>
         </header>
@@ -302,20 +434,86 @@ export function AppShell() {
               transition={{ duration: 0.25 }}
             >
               {active === "dashboard" && <DashboardHome onNavigate={setActive} />}
-              {active === "vaults" && <VaultView />}
-              {active === "albums" && <AlbumsView />}
-              {active === "journals" && <JournalView />}
-              {active === "friends" && <FriendsView />}
-              {active === "calendar" && <CalendarView />}
-              {active === "discover" && <DiscoverView />}
-              {active === "settings" && <SettingsView />}
+              {active === "vaults"    && <VaultView />}
+              {active === "albums"    && <AlbumsView />}
+              {active === "journals"  && <JournalView />}
+              {active === "friends"   && <FriendsView />}
+              {active === "calendar"  && <CalendarView />}
+              {active === "discover"  && <DiscoverView />}
+              {active === "settings"  && <SettingsView />}
               {active === "admin" && user?.role === "ADMIN" && <AdminView />}
             </motion.div>
           </AnimatePresence>
         </div>
       </main>
+
       <HelpBot />
       <ReviewModal open={reviewOpen} onClose={() => setReviewOpen(false)} />
+      <LogoutDialog
+        open={logoutOpen}
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setLogoutOpen(false)}
+      />
+    </div>
+  );
+}
+
+/* ── Logout confirmation dialog ── */
+function LogoutDialog({
+  open,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  onConfirm: (dontAsk: boolean) => void;
+  onCancel: () => void;
+}) {
+  const [dontAsk, setDontAsk] = useState(false);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      {/* Card */}
+      <div className="relative bg-card border border-border rounded-2xl p-6 shadow-warm max-w-sm w-full mx-4">
+        <h3 className="font-display text-lg font-semibold mb-1">Sign out?</h3>
+        <p className="text-sm text-muted-foreground mb-5">
+          You&apos;ll need to sign in again to access your memories.
+        </p>
+
+        {/* Don't ask again */}
+        <label className="flex items-center gap-2.5 text-sm text-muted-foreground mb-6 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={dontAsk}
+            onChange={(e) => setDontAsk(e.target.checked)}
+            className="rounded accent-primary w-4 h-4"
+          />
+          Don&apos;t ask me again
+        </label>
+
+        <div className="flex gap-3">
+          {/* No — primary / highlighted */}
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+          >
+            No, stay
+          </button>
+          {/* Yes — subtle */}
+          <button
+            onClick={() => onConfirm(dontAsk)}
+            className="flex-1 py-2.5 rounded-xl font-medium text-sm border border-border hover:bg-muted transition-colors text-muted-foreground"
+          >
+            Yes, sign out
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
