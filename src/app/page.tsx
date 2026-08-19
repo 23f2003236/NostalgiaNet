@@ -81,9 +81,11 @@ export default function Home() {
     return <AppShell />;
   }
 
-  // If we were authenticated and the session is transitioning (update() in flight),
-  // show the loading screen instead of the landing page.
-  if (everAuthenticated && status !== "unauthenticated") {
+  // If we were authenticated and the session is transitioning (update() in
+  // flight OR actively logging out and waiting for the redirect), show the
+  // loading screen instead of the landing page. The window.location.href in
+  // doLogout() will do a full page reload shortly after, resetting all state.
+  if (everAuthenticated) {
     return <AuthLoadingScreen />;
   }
 

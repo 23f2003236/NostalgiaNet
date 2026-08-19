@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Check, Sparkles, Lock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,6 +32,8 @@ const PREMIUM_FEATURES: { label: string; blurred?: boolean }[] = [
 ];
 
 export function LandingPricing({ onGetStarted }: { onGetStarted: () => void }) {
+  const shouldReduceMotion = useReducedMotion();
+
   const notifyToast = (tier: string) =>
     toast.info(
       `We'll announce ${tier} plan details closer to January 2027. Stay tuned!`,
@@ -43,30 +45,30 @@ export function LandingPricing({ onGetStarted }: { onGetStarted: () => void }) {
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-2xl mx-auto text-center mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.6 }}
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4"
           >
             <Sparkles className="size-3" />
             <span>Simple, honest pricing</span>
           </motion.div>
           <motion.h2
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, delay: 0.05 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.7, delay: shouldReduceMotion ? 0 : 0.05 }}
             className="font-display text-4xl lg:text-5xl font-semibold tracking-tight"
           >
             Pick your{" "}
             <span className="text-gradient-warm italic">forever-plan</span>
           </motion.h2>
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, delay: 0.15 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.7, delay: shouldReduceMotion ? 0 : 0.15 }}
             className="mt-5 text-muted-foreground font-serif text-lg"
           >
             Free while we build. Paid plans reveal in January 2027.
@@ -78,10 +80,10 @@ export function LandingPricing({ onGetStarted }: { onGetStarted: () => void }) {
 
           {/* ── Free tier ── */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.55 }}
+            transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : 0 }}
             className="relative p-7 rounded-3xl border bg-card border-border/60 hover:border-primary/30 hover:-translate-y-1 transition-all"
           >
             <div className="mb-2 font-display text-xl font-semibold">Free</div>
@@ -115,10 +117,10 @@ export function LandingPricing({ onGetStarted }: { onGetStarted: () => void }) {
 
           {/* ── Basic tier — features visible, price blurred ── */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.55, delay: 0.07 }}
+            transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : 0.09 }}
             className="relative p-7 rounded-3xl border bg-card border-border/60 hover:border-primary/30 hover:-translate-y-1 transition-all"
           >
             {/* Coming soon badge */}
@@ -164,10 +166,10 @@ export function LandingPricing({ onGetStarted }: { onGetStarted: () => void }) {
 
           {/* ── Premium tier — price blurred, 2 feature teasers blurred ── */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.55, delay: 0.14 }}
+            transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : 0.18 }}
             className="relative p-7 rounded-3xl border bg-card border-primary/40 shadow-warm hover:-translate-y-1 transition-all"
           >
             {/* Coming soon badge */}

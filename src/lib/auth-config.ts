@@ -206,16 +206,25 @@ export const authOptions: NextAuthOptions = {
       } else if (token.uid) {
         // Session refresh (update() called) — re-fetch mutable fields so
         // avatar/name/bio changes propagate to all clients immediately.
-        const dbUser = await db.user.findUnique({
-          where: { id: token.uid as string },
-          select: { name: true, avatar: true, bio: true, plan: true, role: true },
-        });
-        if (dbUser) {
-          token.name = dbUser.name;
-          token.avatar = dbUser.avatar;
-          token.bio = dbUser.bio;
-          token.plan = dbUser.plan;
-          token.role = dbUser.role;
+        // Wrapped in try-catch: if Neon is cold-starting after a long idle
+        // period the DB query can throw PrismaClientInitializationError.
+        // Without this guard, the jwt callback crashes → NextAuth nullifies
+        // the session → user is unexpectedly logged out. We simply return the
+        // existing token unchanged so the session stays valid.
+        try {
+          const dbUser = await db.user.findUnique({
+            where: { id: token.uid as string },
+            select: { name: true, avatar: true, bio: true, plan: true, role: true },
+          });
+          if (dbUser) {
+            token.name = dbUser.name;
+            token.avatar = dbUser.avatar;
+            token.bio = dbUser.bio;
+            token.plan = dbUser.plan;
+            token.role = dbUser.role;
+          }
+        } catch {
+          // DB unavailable — keep existing token data, session remains valid
         }
       }
       return token;

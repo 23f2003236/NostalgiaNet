@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Upload, CalendarHeart, Gift } from "lucide-react";
 
 const STEPS = [
@@ -22,24 +22,26 @@ const STEPS = [
 ];
 
 export function LandingHow() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <section id="how" className="relative py-24 lg:py-32 bg-muted/40">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-2xl mx-auto text-center mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.6 }}
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4"
           >
             <span>Three quiet steps</span>
           </motion.div>
           <motion.h2
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, delay: 0.05 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.7, delay: shouldReduceMotion ? 0 : 0.05 }}
             className="font-display text-4xl lg:text-5xl font-semibold tracking-tight"
           >
             How a capsule is{" "}
@@ -54,10 +56,10 @@ export function LandingHow() {
           {STEPS.map((s, i) => (
             <motion.div
               key={s.title}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.55, delay: i * 0.1 }}
+              transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : i * 0.12 }}
               className="relative bg-card border border-border/60 rounded-3xl p-7 text-center"
             >
               <div className="relative size-24 mx-auto mb-5">

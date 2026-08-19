@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
 
 const STORIES = [
@@ -31,25 +31,27 @@ const STORIES = [
 ];
 
 export function LandingTestimonials() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <section id="testimonials" className="relative py-24 lg:py-32">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-2xl mx-auto text-center mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.6 }}
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium mb-4"
           >
             <Star className="size-3" />
             <span>Stories from memory-keepers</span>
           </motion.div>
           <motion.h2
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, delay: 0.05 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.7, delay: shouldReduceMotion ? 0 : 0.05 }}
             className="font-display text-4xl lg:text-5xl font-semibold tracking-tight"
           >
             Future-you will{" "}
@@ -61,10 +63,10 @@ export function LandingTestimonials() {
           {STORIES.map((s, i) => (
             <motion.div
               key={s.name}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.55, delay: i * 0.08 }}
+              transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : i * 0.1 }}
               className="relative p-7 rounded-3xl bg-card border border-border/60 overflow-hidden"
             >
               <div

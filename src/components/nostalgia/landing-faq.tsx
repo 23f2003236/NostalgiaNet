@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import { ChevronDown, HelpCircle, Code2, Bug, Rocket, Sparkles } from "lucide-react";
 
@@ -49,36 +49,37 @@ const FAQS = [
 
 export function LandingFaq() {
   const [open, setOpen] = useState<number | null>(0);
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <section id="faq" className="relative py-24 lg:py-32">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="max-w-2xl mx-auto text-center mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.6 }}
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium mb-4"
           >
             <HelpCircle className="size-3" />
             <span>Questions, answered</span>
           </motion.div>
           <motion.h2
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, delay: 0.05 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.7, delay: shouldReduceMotion ? 0 : 0.05 }}
             className="font-display text-4xl lg:text-5xl font-semibold tracking-tight"
           >
             Frequently asked{" "}
             <span className="text-gradient-warm italic">questions</span>
           </motion.h2>
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, delay: 0.15 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.7, delay: shouldReduceMotion ? 0 : 0.15 }}
             className="mt-5 text-muted-foreground font-serif text-lg"
           >
             Everything you want to know about NostalgiaNet++ — who built it,
@@ -90,10 +91,10 @@ export function LandingFaq() {
           {FAQS.map((faq, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.4, delay: i * 0.04 }}
+              transition={{ duration: 0.4, delay: shouldReduceMotion ? 0 : i * 0.05 }}
               className="rounded-2xl bg-card border border-border/60 overflow-hidden hover:border-primary/30 transition-colors"
             >
               <button
