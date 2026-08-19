@@ -138,7 +138,7 @@ export function AuthModal({
         return;
       }
 
-      await signIn("google", { callbackUrl: "/" });
+      await signIn("google", { callbackUrl: "/?authed=1" });
     } catch {
       toast.error("Google sign-in failed");
       setLoading(false);

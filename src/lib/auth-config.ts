@@ -157,43 +157,81 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google" && user.email) {
-        // Upsert user into our DB on Google sign-in
-        const existing = await db.user.findUnique({
-          where: { email: user.email },
-        });
-        if (!existing) {
-          await db.user.create({
-            data: {
-              email: user.email,
-              name: user.name || user.email.split("@")[0],
-              avatar: user.image || null,
-              password: null,
-            },
+        // Upsert user into our DB on Google sign-in.
+        // Wrapped with one retry: on first cold start Neon can take 3-5s to
+        // wake up and the initial DB call throws PrismaClientInitializationError.
+        // Without a retry NextAuth redirects to /?auth=login (sign-in error page)
+        // and the user has to click Google again. One retry fixes this.
+        const doUpsert = async () => {
+          const existing = await db.user.findUnique({
+            where: { email: user.email! },
           });
-        } else if (!existing.avatar && user.image) {
-          await db.user.update({
-            where: { id: existing.id },
-            data: { avatar: user.image },
-          });
+          if (!existing) {
+            await db.user.create({
+              data: {
+                email: user.email!,
+                name: user.name || user.email!.split("@")[0],
+                avatar: user.image || null,
+                password: null,
+              },
+            });
+          } else if (!existing.avatar && user.image) {
+            await db.user.update({
+              where: { id: existing.id },
+              data: { avatar: user.image },
+            });
+          }
+        };
+
+        try {
+          await doUpsert();
+        } catch {
+          // First attempt failed — wait for Neon to wake, retry once
+          await new Promise((r) => setTimeout(r, 4000));
+          try {
+            await doUpsert();
+          } catch (retryErr) {
+            console.error("[google signIn] DB unavailable after retry:", retryErr);
+            return false; // Deny sign-in — show error rather than broken session
+          }
         }
       }
       return true;
     },
     async jwt({ token, user }) {
       if (user) {
-        // First login — hydrate full token from DB
-        const dbUser = await db.user.findUnique({
-          where: { email: user.email! },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-            bio: true,
-            plan: true,
-            role: true,
-          },
-        });
+        // First login — hydrate full token from DB.
+        // Retry once: signIn callback may have just woken Neon, but the DB
+        // can still be mid-startup when jwt fires milliseconds later.
+        const fetchUser = () =>
+          db.user.findUnique({
+            where: { email: user.email! },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+              bio: true,
+              plan: true,
+              role: true,
+            },
+          });
+
+        let dbUser: Awaited<ReturnType<typeof fetchUser>> = null;
+        try {
+          dbUser = await fetchUser();
+        } catch {
+          // Brief wait then retry — handles the edge case where Neon is still
+          // spinning up after the signIn callback just woke it.
+          await new Promise((r) => setTimeout(r, 2000));
+          try {
+            dbUser = await fetchUser();
+          } catch {
+            // Still unavailable — token.uid will be unset this request;
+            // the next session refresh will succeed once Neon is fully warm.
+          }
+        }
+
         if (dbUser) {
           token.uid = dbUser.id;
           token.name = dbUser.name;
