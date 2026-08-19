@@ -41,17 +41,25 @@ export default async function PublicDiscoverPage() {
     take: 60,
   });
 
-  // Serialize Date → string at the boundary so it matches Vault type
-  const vaults: Vault[] = dbVaults.map((v) => ({
-    ...v,
-    unlockAt: v.unlockAt.toISOString(),
-    createdAt: v.createdAt.toISOString(),
-    updatedAt: v.updatedAt.toISOString(),
-    memories: v.memories.map((m) => ({
-      ...m,
-      createdAt: m.createdAt.toISOString(),
-    })),
-  }));
+  // Serialize Date → string at the boundary and redact sealed-vault media.
+  // This page has no user context (unauthenticated, Google-crawlable), so
+  // every vault whose unlockAt is still in the future must have its
+  // coverImage and memories stripped before reaching the client.
+  const now = new Date();
+  const vaults: Vault[] = dbVaults.map((v) => {
+    const isUnlocked = new Date(v.unlockAt) <= now;
+    return {
+      ...v,
+      unlockAt: v.unlockAt.toISOString(),
+      createdAt: v.createdAt.toISOString(),
+      updatedAt: v.updatedAt.toISOString(),
+      // Sealed vault → strip media; only title/category/countdown exposed
+      coverImage: isUnlocked ? v.coverImage : null,
+      memories: isUnlocked
+        ? v.memories.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }))
+        : [],
+    };
+  });
 
   // Group by category for SEO-friendly structure
   const byCategory: Record<string, Vault[]> = {};

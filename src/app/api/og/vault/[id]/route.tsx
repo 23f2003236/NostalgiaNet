@@ -48,14 +48,16 @@ export async function GET(
     ? `${vault.memories.length} ${vault.memories.length === 1 ? "memory" : "memories"} waiting to be revisited`
     : unlockDate;
 
-  // Cover image as background if present.
+  // Cover image as background — only for unlocked vaults.
+  // For sealed vaults the cover photo must not be exposed via the share card,
+  // so we fall back to the warm gradient (same as the no-image path).
   // Satori/@vercel/og requires ABSOLUTE URLs to fetch images server-side —
   // a relative path like /uploads/foo.jpg won't resolve.
   const baseUrl =
     process.env.PUBLIC_URL ||
     process.env.NEXTAUTH_URL ||
     "http://localhost:3000";
-  const absoluteCover = vault.coverImage
+  const absoluteCover = isUnlocked && vault.coverImage
     ? vault.coverImage.startsWith("http")
       ? vault.coverImage
       : `${baseUrl}${vault.coverImage}`

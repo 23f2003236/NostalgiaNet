@@ -83,16 +83,23 @@ export default async function PublicVaultPage({
     notFound();
   }
 
-  // Serialize Date → string at the boundary
+  // Serialize Date → string at the boundary and redact sealed-vault media.
+  // The UI already shows a "Still sealed" state for sealed vaults, but without
+  // this guard the raw coverImage + memories URLs are embedded in the RSC
+  // payload — visible in page source and browser devtools to any visitor.
+  const isUnlocked = new Date(dbVault.unlockAt) <= new Date();
   const vault = {
     ...dbVault,
     unlockAt: dbVault.unlockAt.toISOString(),
     createdAt: dbVault.createdAt.toISOString(),
     updatedAt: dbVault.updatedAt.toISOString(),
-    memories: dbVault.memories.map((m) => ({
-      ...m,
-      createdAt: m.createdAt.toISOString(),
-    })),
+    // Sealed vault → strip media so no URLs reach the client bundle
+    coverImage: isUnlocked ? dbVault.coverImage : null,
+    memories: isUnlocked
+      ? dbVault.memories.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }))
+      : [],
+    // Preserve count so the UI can show "X memories sealed inside"
+    memoriesCount: dbVault.memories.length,
   };
 
   return <PublicVaultView vault={vault} />;

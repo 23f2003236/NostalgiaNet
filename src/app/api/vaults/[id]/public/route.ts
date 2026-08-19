@@ -32,7 +32,9 @@ export async function GET(
         id: vault.id,
         title: vault.title,
         description: vault.description,
-        coverImage: vault.coverImage,
+        // Redact coverImage for sealed vaults — same rule as memories below.
+        // Sealed = still locked, so cover photo must not be exposed publicly.
+        coverImage: isUnlocked ? vault.coverImage : null,
         unlockAt: vault.unlockAt,
         isPublic: vault.isPublic,
         isSealed: !isUnlocked,
