@@ -90,6 +90,7 @@ export function AppShell() {
   const [dontAskLogout, setDontAskLogout] = useState(false);
   const [themePickerOpen, setThemePickerOpen] = useState(false);
   const [activeTheme, setActiveTheme] = useState("slate");
+  const [loggingOut, setLoggingOut] = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -125,13 +126,13 @@ export function AppShell() {
 
   const doLogout = () => {
     toast.success("Signed out. See you soon!", { duration: 3000 });
-    setTimeout(() => {
-      // Navigate FIRST — browser starts loading landing page immediately,
-      // so the unauthenticated React re-render never reaches the screen.
+    // Show overlay immediately — hides any React re-renders during signOut
+    setLoggingOut(true);
+    setTimeout(async () => {
+      // Sign out first so the session cookie is cleared BEFORE we navigate.
+      // The overlay above keeps the screen blank so no auth-flash shows.
+      await signOut({ redirect: false });
       window.location.href = window.location.origin + "/";
-      // signOut clears the cookie server-side; redirect: false since we
-      // already kicked off the hard navigation above.
-      signOut({ redirect: false });
     }, 350);
   };
 
@@ -454,6 +455,12 @@ export function AppShell() {
         onConfirm={handleLogoutConfirm}
         onCancel={() => setLogoutOpen(false)}
       />
+      {/* Full-screen overlay shown during sign-out to prevent any flash */}
+      {loggingOut && (
+        <div className="fixed inset-0 z-[200] bg-background flex items-center justify-center">
+          <div className="text-muted-foreground text-sm animate-pulse">Signing out…</div>
+        </div>
+      )}
     </div>
   );
 }
