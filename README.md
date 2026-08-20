@@ -50,7 +50,7 @@ Deployed entirely on free tiers — **$0/month** to run.
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/NostalgiaNet.git
+git clone https://github.com/23f2003236/NostalgiaNet.git
 cd NostalgiaNet
 
 # Install dependencies
