@@ -57,6 +57,7 @@ model Vault {
   memories    Memory[]
   shares      Share[]
   contributors VaultContributor[]
+  reactions   VaultReaction[]
 }
 
 model Memory {
@@ -207,4 +208,19 @@ model Review {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId])
+}
+
+// Anonymous "light a candle" reactions on public vaults.
+// visitorId is a browser-generated UUID from localStorage — no account needed.
+// @@unique([vaultId, visitorId]) prevents the same visitor from reacting twice.
+model VaultReaction {
+  id          String   @id @default(cuid())
+  vaultId     String
+  visitorId   String   // Browser UUID (localStorage), max 64 chars
+  createdAt   DateTime @default(now())
+
+  vault       Vault    @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  @@unique([vaultId, visitorId])
+  @@index([vaultId])
 }

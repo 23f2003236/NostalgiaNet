@@ -29,6 +29,8 @@ export type Vault = {
   userId: string;
   memories: Memory[];
   user?: { name: string; avatar: string | null };
+  // Populated on public pages (discover, /v/[id]) via Prisma _count.reactions
+  reactionCount?: number;
   // Optional role flag — set when fetched via scope=mine, indicates whether
   // the current user owns the vault or is a contributor on it.
   _role?: "owner" | "contributor";

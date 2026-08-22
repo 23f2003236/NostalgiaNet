@@ -8,6 +8,7 @@ import type { Memory } from "@/lib/api";
 import { Vault } from "@/lib/api";
 import { formatCountdown, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { CandleButton } from "@/components/nostalgia/candle-button";
 
 export function VaultCard({
   vault,
@@ -88,7 +89,7 @@ export function VaultCard({
         )}
 
         <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-3 text-muted-foreground">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <Clock className="size-3" />
               {isUnlocked ? (
@@ -106,11 +107,21 @@ export function VaultCard({
               </span>
             )}
           </div>
-          {vault.user && (
-            <span className="text-[10px] text-muted-foreground">
-              by {vault.user.name}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Candle reaction — only shown on public discover/vault pages */}
+            {vault.reactionCount !== undefined && (
+              <CandleButton
+                vaultId={vault.id}
+                initialCount={vault.reactionCount}
+                size="sm"
+              />
+            )}
+            {vault.user && (
+              <span className="text-[10px] text-muted-foreground">
+                by {vault.user.name}
+              </span>
+            )}
+          </div>
         </div>
 
         {!isUnlocked && (

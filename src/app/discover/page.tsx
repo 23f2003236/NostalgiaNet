@@ -36,6 +36,7 @@ export default async function PublicDiscoverPage() {
     include: {
       user: { select: { name: true, avatar: true } },
       memories: true,
+      _count: { select: { reactions: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 60,
@@ -58,6 +59,8 @@ export default async function PublicDiscoverPage() {
       memories: isUnlocked
         ? v.memories.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }))
         : [],
+      // Reaction count from Prisma _count — no extra client fetch needed
+      reactionCount: v._count.reactions,
     };
   });
 

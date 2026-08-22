@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/icons/logo";
 import { formatCountdown, formatDate } from "@/lib/format";
+import { CandleButton } from "@/components/nostalgia/candle-button";
 
 type Memory = {
   id: string;
@@ -38,6 +39,7 @@ type PublicVault = {
   user: { name: string; avatar: string | null };
   memories: Memory[];
   memoriesCount?: number;
+  reactionCount?: number;
 };
 
 export function PublicVaultView({ vault }: { vault: PublicVault }) {
@@ -117,7 +119,7 @@ export function PublicVaultView({ vault }: { vault: PublicVault }) {
         </motion.div>
 
         {/* Meta row */}
-        <div className="grid sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid sm:grid-cols-3 gap-4 mb-6">
           <MetaCard
             icon={User}
             label="Sealed by"
@@ -135,6 +137,18 @@ export function PublicVaultView({ vault }: { vault: PublicVault }) {
             value={isUnlocked ? "Now open" : formatCountdown(vault.unlockAt)}
             accent
           />
+        </div>
+
+        {/* Candle reaction row */}
+        <div className="flex items-center gap-3 mb-8 px-1">
+          <CandleButton
+            vaultId={vault.id}
+            initialCount={vault.reactionCount ?? 0}
+            size="md"
+          />
+          <span className="text-xs text-muted-foreground">
+            Light a candle for this capsule — no account needed
+          </span>
         </div>
 
         {/* Body */}

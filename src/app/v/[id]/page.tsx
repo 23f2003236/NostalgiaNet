@@ -76,6 +76,7 @@ export default async function PublicVaultPage({
     include: {
       memories: { orderBy: { order: "asc" } },
       user: { select: { name: true, avatar: true } },
+      _count: { select: { reactions: true } },
     },
   });
 
@@ -100,6 +101,8 @@ export default async function PublicVaultPage({
       : [],
     // Preserve count so the UI can show "X memories sealed inside"
     memoriesCount: dbVault.memories.length,
+    // Reaction count for candle button
+    reactionCount: dbVault._count.reactions,
   };
 
   return <PublicVaultView vault={vault} />;

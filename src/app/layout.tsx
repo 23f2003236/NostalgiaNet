@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display, Lora } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { AppStoreProvider } from "@/components/providers/app-store";
+import { PWAInstaller } from "@/components/nostalgia/pwa-installer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,11 +24,30 @@ const lora = Lora({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#8b4513",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "NostalgiaNet++ — Where Memories Live Forever",
   description:
     "Preserve your cherished moments in time capsules. Lock memories away, set an unlock date, and relive them years from now. A beautiful digital memory vault.",
   keywords: ["time capsule", "memories", "nostalgia", "memory vault", "journal"],
+  // PWA + iOS home screen
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "NostalgiaNet",
+  },
+  icons: {
+    apple: "/api/icons/180",
+    icon: [
+      { url: "/api/icons/32", sizes: "32x32", type: "image/png" },
+      { url: "/api/icons/192", sizes: "192x192", type: "image/png" },
+    ],
+  },
 };
 
 // Inline script — runs before hydration to apply the saved theme + color scheme.
@@ -75,6 +95,8 @@ export default function RootLayout({
             />
           </AppStoreProvider>
         </ThemeProvider>
+        {/* Registers /sw.js for PWA installability — renders nothing */}
+        <PWAInstaller />
       </body>
     </html>
   );
