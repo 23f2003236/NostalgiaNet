@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { getServerUserId } from "@/lib/session";
 import { JoinVaultPage } from "@/components/nostalgia/join-vault-page";
 
 export async function generateMetadata({
@@ -21,6 +22,8 @@ export async function generateMetadata({
     };
   }
 
+  const isUnlocked = new Date(vault.unlockAt) <= new Date();
+
   return {
     title: `Join "${vault.title}" — NostalgiaNet++`,
     description: vault.description || `You've been invited to contribute to a collaborative time capsule.`,
@@ -28,7 +31,7 @@ export async function generateMetadata({
       title: `Join "${vault.title}"`,
       description: vault.description || "A collaborative time capsule awaits your memories.",
       siteName: "NostalgiaNet++",
-      images: vault.coverImage ? [{ url: vault.coverImage }] : undefined,
+      images: isUnlocked && vault.coverImage ? [{ url: vault.coverImage }] : undefined,
     },
   };
 }
@@ -43,7 +46,6 @@ export default async function JoinVaultRoute({
     where: { inviteToken: token },
     include: {
       user: { select: { name: true } },
-      memories: true,
       contributors: { include: { user: { select: { id: true, name: true, avatar: true } } } },
     },
   });
@@ -52,16 +54,21 @@ export default async function JoinVaultRoute({
     notFound();
   }
 
-  // Serialize Date → string at the boundary
+  const userId = await getServerUserId();
+  const isOwner = userId ? dbVault.userId === userId : false;
+  const isContributor = userId
+    ? dbVault.contributors.some((c) => c.userId === userId)
+    : false;
+  const isUnlocked = new Date(dbVault.unlockAt) <= new Date();
+  const canSeeSealedMedia = isUnlocked || isOwner || isContributor;
+
+  // Serialize Date → string at the boundary and redact sealed media.
   const vault = {
     ...dbVault,
     unlockAt: dbVault.unlockAt.toISOString(),
     createdAt: dbVault.createdAt.toISOString(),
     updatedAt: dbVault.updatedAt.toISOString(),
-    memories: dbVault.memories.map((m) => ({
-      ...m,
-      createdAt: m.createdAt.toISOString(),
-    })),
+    coverImage: canSeeSealedMedia ? dbVault.coverImage : null,
     contributors: dbVault.contributors.map((c) => ({
       ...c,
       joinedAt: c.joinedAt.toISOString(),
@@ -70,3 +77,4 @@ export default async function JoinVaultRoute({
 
   return <JoinVaultPage vault={vault} />;
 }
+
